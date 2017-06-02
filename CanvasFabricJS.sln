@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasFabricJS", "CanvasFabricJS\CanvasFabricJS.csproj", "{F4796991-4A1A-4D88-8319-73F56C829026}"
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasFabricSexJS", "CanvasFabricSexJS\CanvasFabricSexJS.csproj", "{D0C236C8-379A-456D-8244-51F4175AA38F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoJS", "GoJS\GoJS.csproj", "{AFA71D25-41BA-45FD-9095-A8884A7750C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F4796991-4A1A-4D88-8319-73F56C829026}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4796991-4A1A-4D88-8319-73F56C829026}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4796991-4A1A-4D88-8319-73F56C829026}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4796991-4A1A-4D88-8319-73F56C829026}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0C236C8-379A-456D-8244-51F4175AA38F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0C236C8-379A-456D-8244-51F4175AA38F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0C236C8-379A-456D-8244-51F4175AA38F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0C236C8-379A-456D-8244-51F4175AA38F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFA71D25-41BA-45FD-9095-A8884A7750C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFA71D25-41BA-45FD-9095-A8884A7750C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFA71D25-41BA-45FD-9095-A8884A7750C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFA71D25-41BA-45FD-9095-A8884A7750C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

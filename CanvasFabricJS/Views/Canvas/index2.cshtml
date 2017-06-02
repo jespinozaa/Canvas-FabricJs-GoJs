@@ -1,0 +1,92 @@
+﻿
+@{
+    ViewBag.Title = "Canvas2";
+}
+
+<h2>Canvas2</h2>
+!DOCTYPE html>
+<head>
+    <script src="https://rawgit.com/kangax/fabric.js/master/dist/fabric.min.js"></script>
+    <button onClick="newAnimation()">new Animation</button>
+    <button onClick="addRect()">Rectangle</button>
+    <button onClick="addCircle()">Circle</button>
+    <button onClick="addChild()">Add Child</button>
+    <button onClick="deleteObject()">Delete Object</button>
+    <canvas id="canvas" width="600" height="300"></canvas>
+
+    </head>
+    <body>
+    #canvas{
+    background-color:gray
+    }
+
+    <script>
+        function makeLine(coords) {
+            return new fabric.Line(coords, {
+                fill: 'red',
+                stroke: 'red',
+                strokeWidth: 5
+            });
+        }
+
+        window.deleteObject = function () {
+            canvas.getActiveObject().remove();
+        }
+
+        var canvas;
+        window.newAnimation = function () {
+            canvas = new fabric.Canvas('canvas');
+
+            var selectedElement = null;
+            canvas.on('object:selected', function (options) {
+                if (canvas.connect) {
+                    canvas.connect = false;
+                    var from = selectedElement.getCenterPoint();
+                    var to = options.target.getCenterPoint();
+                    var line = makeLine([from.x, from.y, to.x, to.y]);
+                    canvas.add(line);
+
+                    selectedElement.moveLine = function () {
+                        var from = selectedElement.getCenterPoint();
+                        line.set({ 'x1': from.x, 'y1': from.y });
+                    };
+                    options.target.moveLine = function () {
+                        var to = options.target.getCenterPoint();
+                        line.set({ 'x2': to.x, 'y2': to.y });
+                    };
+                }
+                selectedElement = options.target;
+            });
+            canvas.on('object:moving', function (e) {
+                e.target.moveLine();
+                canvas.renderAll();
+            });
+        }
+
+        window.addChild = function () {
+            canvas.connect = true;
+        }
+
+        window.addRect = function () {
+            var rect = new fabric.Rect({
+                left: 100,
+                top: 100,
+                fill: 'red',
+                width: 20,
+                height: 20,
+            });
+            canvas.add(rect);
+
+        }
+
+        window.addCircle = function () {
+            var circle = new fabric.Circle({
+                radius: 20, fill: 'green', left: 100, top: 100
+            });
+            canvas.add(circle);
+        }
+
+    </script>
+    </script>
+</body>
+

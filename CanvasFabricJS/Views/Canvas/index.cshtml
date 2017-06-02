@@ -1,0 +1,425 @@
+﻿
+@{
+    ViewBag.Title = "Canvas";
+}
+
+<h2>Canvas</h2>
+<!DOCTYPE html>
+<head>
+    <script src="https://rawgit.com/kangax/fabric.js/master/dist/fabric.min.js"></script>
+    <script src="jquery-3.2.0.min.js"></script>
+
+    @*<button onClick="newAnimation()">new Animation</button>*@
+    <button onClick="addRect()">Rectangle</button>
+    <button onClick="addCircle()">Circle</button>
+    <input type="button" id="boton" value="Sector Consumo">
+    <input type="button" id="boton1" value="PlantaElevadora">
+    <input type="button" id="tuberia" value="Tramo">
+    <button onClick="addChild()">Add Child</button>
+    <button onClick="deleteObject()">Delete Object</button>
+    <canvas id="canvas" width="1000" height="600" style="border:1px solid"></canvas>
+    <br />
+    <img id="preview" />
+</head>
+<body onload="newAnimation()">
+    <script>
+        var canvas;
+        var idrecieve = 0;
+        var imgURL = "";
+        window.newAnimation = function () {
+            canvas = new fabric.Canvas('canvas');
+    
+
+            canvas.on("mouse:down", function (e) {
+                if (canvasFocus && imgURL != "") { dibujarImagen(imgURL, idrecieve) }
+
+                canvasFocus = false;
+                imgURL = "";
+            });
+
+
+    
+
+            canvas.on('object:selected', function (o) {
+                var activeObj = o.target;
+                //if (activeObj.get('type') == 'group') {
+                    activeObj.set({ 'borderColor': '#fbb802', 'cornerColor': '#fbb802' });
+                    //alert("objectos sleecionados ID:" + activeObj.id);
+
+                //}
+            });
+
+            // we need this here because this is when the canvas gets initialized
+            ['object:moving', 'object:scaling'].forEach(addChildMoveLine)
+        }
+         
+        ////LLAMADO A LAS FUNCIONES
+
+        document.getElementById("boton").addEventListener("click", function (e) {
+            canvas.isDrawingMode = false;
+            imgURL = "/Images/SectorConsumo.png";
+            idrecieve = 2;
+            canvasFocus = true;
+
+        });
+
+
+        document.getElementById("boton1").addEventListener("click", function (e) {
+            canvas.isDrawingMode = false;
+            imgURL = "/Images/PlantaElevadora.png";
+            idrecieve = 1;
+            canvasFocus = true;
+
+
+
+        });
+
+        document.getElementById("tuberia").addEventListener("click", function (e) {
+
+            canvas.isDrawingMode = true;
+        });
+
+
+
+        //FUNCIONES DE DIBUJO
+        function dibujarImagen(value,idrecieve) {
+            var pointer = canvas.getPointer(event.e);
+            var posX = pointer.x;
+            var posY = pointer.y;
+            if(canvasFocus)
+            fabric.Image.fromURL(value, function (img) {
+                var oImg = img.set({ left: posX, top: posY, width: 50, height: 50, angle: 0, id: idrecieve }).scale(0.9);
+                canvas.add(oImg).renderAll();
+            });
+        }
+
+
+        //dibujar lineass
+        function makeLine(coords) {
+            return new fabric.Line(coords, {
+                fill: 'red',
+                stroke: 'red',
+                strokeWidth: 5
+            });
+        }
+
+        window.addRect = function () {
+            var rect = new fabric.Rect({
+                left: 100,
+                top: 100,
+                fill: 'red',
+                width: 20,
+                height: 20,
+            });
+            canvas.add(rect);
+        }
+
+        window.addCircle = function () {
+            var circle = new fabric.Circle({
+                radius: 20, fill: 'green', left: 100, top: 100
+            });
+            canvas.add(circle);
+        }
+
+
+
+
+        function addChildLine(options) {
+            canvas.off('object:selected', addChildLine);
+
+            // add the line
+            var fromObject = canvas.addChild.start;
+            var toObject = options.target;
+            var from = fromObject.getCenterPoint();
+            var to = toObject.getCenterPoint();
+            var line = new fabric.Line([from.x, from.y, to.x, to.y], {
+                fill: 'red',
+                stroke: 'red',
+                strokeWidth: 5,
+                selectable: false
+            });
+            canvas.add(line);
+            // so that the line is behind the connected shapes
+            line.sendToBack();
+
+            // add a reference to the line to each object
+            fromObject.addChild = {
+                // this retains the existing arrays (if there were any)
+                from: (fromObject.addChild && fromObject.addChild.from) || [],
+                to: (fromObject.addChild && fromObject.addChild.to)
+            }
+            fromObject.addChild.from.push(line);
+            toObject.addChild = {
+                from: (toObject.addChild && toObject.addChild.from),
+                to: (toObject.addChild && toObject.addChild.to) || []
+            }
+            toObject.addChild.to.push(line);
+
+            // to remove line references when the line gets removed
+            line.addChildRemove = function () {
+                fromObject.addChild.from.forEach(function (e, i, arr) {
+                    if (e === line)
+                        arr.splice(i, 1);
+                });
+                toObject.addChild.to.forEach(function (e, i, arr) {
+                    if (e === line)
+                        arr.splice(i, 1);
+                });
+            }
+
+            // undefined instead of delete since we are anyway going to do this many times
+            canvas.addChild = undefined;
+        }
+
+        function addChildMoveLine(event) {
+            canvas.on(event, function (options) {
+                var object = options.target;
+                var objectCenter = object.getCenterPoint();
+                // udpate lines (if any)
+                if (object.addChild) {
+                    if (object.addChild.from)
+                        object.addChild.from.forEach(function (line) {
+                            line.set({ 'x1': objectCenter.x, 'y1': objectCenter.y });
+                        })
+                    if (object.addChild.to)
+                        object.addChild.to.forEach(function (line) {
+                            line.set({ 'x2': objectCenter.x, 'y2': objectCenter.y });
+                        })
+                }
+
+                canvas.renderAll();
+            });
+        }
+
+        window.addChild = function () {
+            canvas.addChild = {
+                start: canvas.getActiveObject()
+            }
+
+            // for when addChild is clicked twice
+            canvas.off('object:selected', addChildLine);
+            canvas.on('object:selected', addChildLine);
+        }
+
+        window.deleteObject = function () {
+            var object = canvas.getActiveObject();
+
+            // remove lines (if any)
+            if (object.addChild) {
+                if (object.addChild.from)
+                    // step backwards since we are deleting
+                    for (var i = object.addChild.from.length - 1; i >= 0; i--) {
+                        var line = object.addChild.from[i];
+                        line.addChildRemove();
+                        line.remove();
+                    }
+                if (object.addChild.to)
+                    for (var i = object.addChild.to.length - 1; i >= 0; i--) {
+                        var line = object.addChild.to[i];
+                        line.addChildRemove();
+                        line.remove();
+                    }
+            }
+
+            object.remove();
+        }
+
+
+        //BUEEEEENOOOOOOOO
+        //var canvas = new fabric.Canvas('canvas')
+        //canvas.on ['object:moving', 'object:scaling'].forEach(addChildMoveLine);
+        //var canvasFocus = false;
+        //var imgURL = "";
+
+
+        ////EVENTOS MOUSEDOWN
+        //canvas.on("mouse:down", function (e) { 
+        //    if (canvasFocus && imgURL != "") { dibujarImagen(imgURL) }
+
+        //    canvasFocus = false;
+        //    imgURL = "";
+        //});
+
+
+
+        //// KEY PRESS ELIMINA NODOS
+        //document.body.addEventListener('keydown', function (e) {
+        //    if (e.keyCode == 46)
+        //        var activeObject = canvas.getActiveObject(),
+        //        activeGroup = canvas.getActiveGroup();
+        //    if (activeObject) {
+        //        if (confirm('Esta seguro de eliminar el nodo?')) {
+        //            canvas.remove(activeObject);
+        //        }
+        //    }
+        //    else if (activeGroup) {
+        //        if (confirm('Esta seguro de eliminar el nodo?')) {
+        //            var objectsInGroup = activeGroup.getObjects();
+        //            canvas.discardActiveGroup();
+        //            objectsInGroup.forEach(function (object) {
+        //                canvas.remove(object);
+        //            });
+        //        }
+        //    }
+        //});
+
+
+        ////LLAMADO A LAS FUNCIONES
+
+        //document.getElementById("boton").addEventListener("click", function (e) {
+        //    canvas.isDrawingMode = false;
+        //    imgURL = "/Images/SectorConsumo.png";
+        //    canvasFocus = true;
+        
+        //});
+
+
+        //document.getElementById("boton1").addEventListener("click", function (e) {
+        //    canvas.isDrawingMode = false;
+        //    imgURL = "/Images/PlantaElevadora.png";
+        //    canvasFocus = true;
+      
+        
+
+        //});
+
+        //document.getElementById("tuberia").addEventListener("click", function (e) {
+
+        //    canvas.isDrawingMode = true;
+        //});
+
+       
+
+        ////FUNCIONES DE DIBUJO
+        //function dibujarImagen(value) {
+        //    var pointer = canvas.getPointer(event.e);
+        //    var posX = pointer.x;
+        //    var posY = pointer.y;
+        //    if(canvasFocus)
+        //    fabric.Image.fromURL(value, function (img) {
+        //        var oImg = img.set({ left: posX, top: posY, width: 50, height: 50, angle: 0 }).scale(0.9);
+        //        canvas.add(oImg).renderAll();
+        //    });
+        //}
+
+
+        ////dibujar lineass
+        //function makeLine(coords) {
+        //    return new fabric.Line(coords, {
+        //        fill: 'red',
+        //        stroke: 'red',
+        //        strokeWidth: 5
+        //    });
+        //}
+     
+        ////FUNCION DE CONECTOR
+        //function addChildLine(options) {
+        //    canvas.off('object:selected', addChildLine);
+
+        //    // add the line
+        //    var fromObject = canvas.addChild.start;
+        //    var toObject = options.target;
+        //    var from = fromObject.getCenterPoint();
+        //    var to = toObject.getCenterPoint();
+        //    var line = new fabric.Line([from.x, from.y, to.x, to.y], {
+        //        fill: 'red',
+        //        stroke: 'red',
+        //        strokeWidth: 5,
+        //        selectable: false
+        //    });
+        //    canvas.add(line);
+        //    // so that the line is behind the connected shapes
+        //    line.sendToBack();
+
+        //    // add a reference to the line to each object
+        //    fromObject.addChild = {
+        //        // this retains the existing arrays (if there were any)
+        //        from: (fromObject.addChild && fromObject.addChild.from) || [],
+        //        to: (fromObject.addChild && fromObject.addChild.to)
+        //    }
+        //    fromObject.addChild.from.push(line);
+        //    toObject.addChild = {
+        //        from: (toObject.addChild && toObject.addChild.from),
+        //        to: (toObject.addChild && toObject.addChild.to) || []
+        //    }
+        //    toObject.addChild.to.push(line);
+
+        //    // to remove line references when the line gets removed
+        //    line.addChildRemove = function () {
+        //        fromObject.addChild.from.forEach(function (e, i, arr) {
+        //            if (e === line)
+        //                arr.splice(i, 1);
+        //        });
+        //        toObject.addChild.to.forEach(function (e, i, arr) {
+        //            if (e === line)
+        //                arr.splice(i, 1);
+        //        });
+        //    }
+
+        //    // undefined instead of delete since we are anyway going to do this many times
+        //    canvas.addChild = undefined;
+        //}
+
+        //function addChildMoveLine(event) {
+        //    canvas.on(event, function (options) {
+        //        var object = options.target;
+        //        var objectCenter = object.getCenterPoint();
+        //        // udpate lines (if any)
+        //        if (object.addChild) {
+        //            if (object.addChild.from)
+        //                object.addChild.from.forEach(function (line) {
+        //                    line.set({ 'x1': objectCenter.x, 'y1': objectCenter.y });
+        //                })
+        //            if (object.addChild.to)
+        //                object.addChild.to.forEach(function (line) {
+        //                    line.set({ 'x2': objectCenter.x, 'y2': objectCenter.y });
+        //                })
+        //        }
+
+        //        canvas.renderAll();
+        //    });
+        //}
+
+        //window.addChild = function () {
+        //    canvas.addChild = {
+        //        start: canvas.getActiveObject()
+        //    }
+
+        //    // for when addChild is clicked twice
+        //    canvas.off('object:selected', addChildLine);
+        //    canvas.on('object:selected', addChildLine);
+        //}
+
+        //window.deleteObject = function () {
+        //    var object = canvas.getActiveObject();
+
+        //    // remove lines (if any)
+        //    if (object.addChild) {
+        //        if (object.addChild.from)
+        //            // step backwards since we are deleting
+        //            for (var i = object.addChild.from.length - 1; i >= 0; i--) {
+        //                var line = object.addChild.from[i];
+        //                line.addChildRemove();
+        //                line.remove();
+        //            }
+        //        if (object.addChild.to)
+        //            for (var i = object.addChild.to.length - 1; i >= 0; i--) {
+        //                var line = object.addChild.to[i];
+        //                line.addChildRemove();
+        //                line.remove();
+        //            }
+        //    }
+
+        //    object.remove();
+        //}
+        
+    </script>
+</body>
+
+
+
+
+
+
+
+

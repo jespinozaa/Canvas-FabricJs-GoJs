@@ -1,0 +1,27 @@
+﻿
+@*@model GoJS.Models.Sistema*@
+
+<!DOCTYPE html>  <!-- HTML5 document type -->
+<html>
+<head>
+  <!-- use go-debug.js when developing and go.js when deploying -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gojs/1.7.7/go-debug.js"></script>
+  <table class="table table-bordered">
+<thead>
+	  <tr>
+	      <th>Id sistema</th>
+	      <th>Descripcion</th>
+	      <th>Accion</th>
+	  </tr>
+</thead>
+<tbody>
+	  @foreach (var item in @Model)
+	  {
+	      <tr>
+	          <th scope="row">@item.IdSistema</th>
+	          <td>@item.Descripcion</td>
+              <td><input type="button" value="Dimensionamiento" onclick="location.href='@Url.Action("Index", "Home", new { id=@item.IdSistema })'" /></td>
+	      </tr> 
+	  }
+</tbody>
+</table>

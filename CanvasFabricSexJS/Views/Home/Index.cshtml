@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>fabric.CanvasEx Events Demo</title>
+    <script src="~/Scripts/fabric.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script src="~/Scripts/fabric.canvasex.js"></script>
+</head>
+<body>
+<div></div>
+<div></div>
+<div></div>
+<div></div>
+    <div style="float:left;">
+        <input type="button" id="boton" class="btn btn-success" value="Sector Consumo">
+        <input type="button" id="boton1" class="btn btn-info" value="PlantaElevadora">
+        <button onClick="addChild()" class="btn btn-warning">Añadir Tramo</button>
+        <button onClick="deleteObject()" class="btn btn-danger">Eliminar Nodo</button>
+        <canvas id="c" width="600" height="400" style="border:1px solid"></canvas>
+    </div>
+    <textarea id="eventInspector" style="float:left; margin-left:10px; width: 300px; height:400px; overflow:scroll;"></textarea>
+    <script>
+        var canvas;
+        var idObject = 0;
+        var imgURL = "";
+
+
+        $(document).ready(function () {
+            // Preparing
+            var canvas = new fabric.CanvasEx('c');
+            
+
+            //EVENTOS
+
+            ['object:moving', 'object:scaling'].forEach(addChildMoveLine)
+
+            canvas.on('object:selected', function (o) {
+                var activeObj = o.target;
+                //if (activeObj.get('type') == 'group') {
+                writeToEventInspector("Grupo Seleccionado");
+                //}
+                    activeObj.set({ 'borderColor': '#fbb802', 'cornerColor': '#fbb802' });
+
+            });
+
+            canvas.on('mouse:dblclick', function (o) {
+                var activeObj = o.target;
+                writeToEventInspector('Doble click sobre nodo ' +activeObj.id);
+                mensaje = "";
+            });
+
+
+
+            canvas.on('mouse:down', function (options) {
+                //writeToEventInspector('canvas mousedown');
+                if (canvasFocus && imgURL != "") { dibujarImagen(imgURL, idObject) }
+         
+                canvasFocus = false;
+                imgURL = "";
+            });
+
+          
+
+
+            //// KEY PRESS ELIMINA NODOS
+            document.body.addEventListener('keydown', function (e) {
+                if (e.keyCode == 46)
+                    var activeObject = canvas.getActiveObject(),
+                    activeGroup = canvas.getActiveGroup();
+
+               if (activeObject) {
+                   if (confirm('Esta seguro de eliminar el nodo?')) {
+                       canvas.remove(activeObject);
+                       writeToEventInspector("Nodo " + activeObject.id + "Eliminado");
+                   }
+                }
+                else if (activeGroup) {
+                    if (confirm('Esta seguro de eliminar el grupo de nodos?')) {
+                        var objectsInGroup = activeGroup.getObjects();
+                        canvas.discardActiveGroup();
+                        objectsInGroup.forEach(function (object) {
+                            canvas.remove(object.addChild);
+                            canvas.remove(object.line);
+                            canvas.remove(object);
+                            writeToEventInspector("Grupo de Nodos Eliminados");
+                        });
+                    }
+                }
+            });
+
+
+
+            ////LLAMADO A LAS FUNCIONES
+
+            document.getElementById("boton").addEventListener("click", function (e) {
+                imgURL = "/Images/SectorConsumo.png";
+                idObject = 2;
+                canvasFocus = true;
+            });
+
+
+            document.getElementById("boton1").addEventListener("click", function (e) {
+                imgURL = "/Images/PlantaElevadora.png";
+                idObject = 1;
+                canvasFocus = true;
+            });
+
+
+         
+
+         
+
+
+            //FUNCIONES DE DIBUJO
+            function dibujarImagen(value, idObject) {
+                var pointer = canvas.getPointer(event.e);
+                var posX = pointer.x;
+                var posY = pointer.y;
+                if (canvasFocus)
+                    fabric.Image.fromURL(value, function (img) {
+                        var oImg = img.set({ left: posX, top: posY, width: 50, height: 50, angle: 0, id: idObject }).scale(0.9);
+                        canvas.add(oImg).renderAll();
+                    });
+                writeToEventInspector("Ingresado correctamente");
+            }
+
+
+
+            //CONECTORES
+
+            function addChildLine(options) {
+                canvas.off('object:selected', addChildLine);
+
+                // add the line
+                var fromObject = canvas.addChild.start;
+                var toObject = options.target;
+                var from = fromObject.getCenterPoint();
+                var to = toObject.getCenterPoint();
+                var line = new fabric.Line([from.x, from.y, to.x, to.y], {
+                    fill: 'green',
+                    stroke: '#555',
+                    corner:5,
+                    strokeWidth: 3,
+                    selectable: false
+                });
+                canvas.add(line);
+                // so that the line is behind the connected shapes
+                line.sendToBack();
+
+                // add a reference to the line to each object
+                fromObject.addChild = {
+                    // this retains the existing arrays (if there were any)
+                    from: (fromObject.addChild && fromObject.addChild.from) || [],
+                    to: (fromObject.addChild && fromObject.addChild.to)
+                }
+                fromObject.addChild.from.push(line);
+                toObject.addChild = {
+                    from: (toObject.addChild && toObject.addChild.from),
+                    to: (toObject.addChild && toObject.addChild.to) || []
+                }
+                toObject.addChild.to.push(line);
+
+                // to remove line references when the line gets removed
+                line.addChildRemove = function () {
+                    fromObject.addChild.from.forEach(function (e, i, arr) {
+                        if (e === line)
+                            arr.splice(i, 1);
+                    });
+                    toObject.addChild.to.forEach(function (e, i, arr) {
+                        if (e === line)
+                            arr.splice(i, 1);
+                    });
+                }
+
+                // undefined instead of delete since we are anyway going to do this many times
+                canvas.addChild = undefined;
+            }
+
+            function addChildMoveLine(event) {
+                canvas.on(event, function (options) {
+                    var object = options.target;
+                    var objectCenter = object.getCenterPoint();
+
+
+                    // udpate lines (if any)
+                    if (object.addChild) {
+                        if (object.addChild.from)
+                            object.addChild.from.forEach(function (line) {
+                                line.set({ 'x1': objectCenter.x, 'y1': objectCenter.y });
+                            })
+                        if (object.addChild.to)
+                            object.addChild.to.forEach(function (line) {
+                                line.set({ 'x2': objectCenter.x, 'y2': objectCenter.y });
+                            })
+                    }
+
+                    canvas.renderAll();
+                });
+            }
+
+            window.addChild = function () {
+                canvas.addChild = {
+                    start: canvas.getActiveObject()
+                }
+
+                // for when addChild is clicked twice
+                canvas.off('object:selected', addChildLine);
+                canvas.on('object:selected', addChildLine);
+            }
+
+            window.deleteObject = function () {
+                var object = canvas.getActiveObject();
+
+                // remove lines (if any)
+                if (object.addChild) {
+                    if (object.addChild.from)
+                        // step backwards since we are deleting
+                        for (var i = object.addChild.from.length - 1; i >= 0; i--) {
+                            var line = object.addChild.from[i];
+                            line.addChildRemove();
+                            line.remove();
+                        }
+                    if (object.addChild.to)
+                        for (var i = object.addChild.to.length - 1; i >= 0; i--) {
+                            var line = object.addChild.to[i];
+                            line.addChildRemove();
+                            line.remove();
+                        }
+                }
+
+                object.remove();
+            }
+
+        });
+
+ 
+
+      
+
+
+        var writeToEventInspector = function (text) {
+            var existingText = $('#eventInspector').text();
+            var newText = existingText + '\r\n' + text;
+            $('#eventInspector').text(newText);
+        }
+
+
+
+
+
+    </script>
+</body>
+</html>
