@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasFabricSexJS", "Canvas
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoJS", "GoJS\GoJS.csproj", "{AFA71D25-41BA-45FD-9095-A8884A7750C7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasFabricJS", "CanvasFabricJS\CanvasFabricJS.csproj", "{F4796991-4A1A-4D88-8319-73F56C829026}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{AFA71D25-41BA-45FD-9095-A8884A7750C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFA71D25-41BA-45FD-9095-A8884A7750C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFA71D25-41BA-45FD-9095-A8884A7750C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4796991-4A1A-4D88-8319-73F56C829026}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4796991-4A1A-4D88-8319-73F56C829026}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4796991-4A1A-4D88-8319-73F56C829026}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4796991-4A1A-4D88-8319-73F56C829026}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
